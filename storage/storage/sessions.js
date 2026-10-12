@@ -28,6 +28,7 @@ const pathFromId = (Env, id, ref) => {
     if (!Basic.isValidId(ref)) { return; }
     if (!id || typeof(id) !== 'string') { return; }
     id = Util.escapeKeyCharacters(id);
+    if (!Basic.isValidId(id)) { return; }
     return Path.join(Env.paths.base, "sessions", id.slice(0, 2), id, ref);
 };
 
