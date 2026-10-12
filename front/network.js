@@ -204,9 +204,10 @@ const initExpress = (Env) => {
         body._cookies = cookies;
         events.httpCommand.fire(body, (err, response) => {
             if (err) {
-                return res.status(500).json({
-                    error: err
-                });
+                if (typeof(err) === "string") {
+                    err = { error: err };
+                }
+                return res.status(500).json(err);
             }
             if (response?._cookie) {
                 res.setHeader('Set-Cookie', response._cookie);

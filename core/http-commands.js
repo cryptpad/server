@@ -326,7 +326,10 @@ const handleResponse = (Env, body, cb) => {
                 Env.Log.error("CHALLENGE_RESPONSE_ACTION_ERROR", {
                     error: Util.serializeError(err),
                 });
-                return void cb('Execution error');
+                return void cb({
+                    error: 'Execution error',
+                    errorCode: Util.serializeError(err)
+                });
             }
             cb(void 0, content);
         }); // XXX req, res as 4th and 5th arguments
