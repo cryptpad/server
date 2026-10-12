@@ -51,7 +51,7 @@ module.exports = function (/* task */) {
         if (typeof(cb) !== 'function' || typeof(impl) !== 'function') {
             throw new Error("expected callback and implementation");
         }
-        if (map[id]) { return void map[id].push(cb); }
+        if (map.hasOwnProperty(id)) { return void map[id].push(cb); }
         map[id] = [cb];
         impl(function () {
             var args = Array.prototype.slice.call(arguments);

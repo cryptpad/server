@@ -124,6 +124,11 @@ const onHKMessage = (Env, seq, user, json) => {
 
     const channel = parsed[1];
 
+    if (!Core.isValidId(channel)) {
+        // Invalid channel: abort
+        return void Env.Log.error('HK_INVALID_CHAN', json);
+    }
+
     let coreId = getCoreId(Env, channel);
     Env.interface.sendQuery(coreId, first, {
         seq, userId, parsed, channel

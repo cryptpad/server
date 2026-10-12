@@ -18,6 +18,7 @@ Core.isValidId = (chan) => {
     return chan && chan.length && /^[a-zA-Z0-9=+-]*$/.test(chan) && [
         Constants.STANDARD_CHANNEL_LENGTH,
         Constants.ADMIN_CHANNEL_LENGTH,
+        Constants.EPHEMERAL_CHANNEL_LENGTH,
         Constants.BLOB_ID_LENGTH
     ].indexOf(chan.length) > -1;
 };
