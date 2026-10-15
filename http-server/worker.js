@@ -154,9 +154,6 @@ const initProxy = (Env, app, infra) => {
             const getTarget = () => {
                 if (proxyCfg.target === "storage") {
                     const dataId = proxyCfg.getIdFromReq(req);
-                    if (typeof (dataId) === "number") {
-
-                    }
                     const id = typeof (dataId) === "number" ? dataId
                         : getStorageId(Env, dataId).slice(8);
                     return storageList[id] + req.baseUrl.slice(1);
