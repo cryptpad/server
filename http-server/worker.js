@@ -12,7 +12,7 @@ const Fs = require('node:fs');
 const Logger = require("../common/logger.js");
 const Util = require("../common/common-util.js");
 
-const { createProxyMiddleware } = require("http-proxy-middleware");
+const { createProxyServer } = require("httpxy");
 const Default = require("./defaults");
 const gzipStatic = require('connect-gzip-static');
 const Environment = require('../common/env.js');
@@ -24,12 +24,6 @@ const Env = {
 };
 
 const onEnvReady = Util.mkEvent(true);
-
-const proxyLog = {
-    error: console.error,
-    warn: () => {},
-    info: () => {},
-};
 
 Mime.lookup('wasm');
 
@@ -82,29 +76,27 @@ const initProxy = (Env, app, infra) => {
 
     let i = 0;
     let j = 0;
-    const wsProxy = createProxyMiddleware({
-        router: (/*req*/) => {
-            return wsList[i++%wsList.length];
-        },
-        ws: true,
-        onProxyReqWs: function (proxyReq, req) {
+    const proxyServer = createProxyServer({});
+    const wsProxy = (req, res) => {
+        proxyServer.web(req, res, { target: wsList[i] });
+        proxyServer.on('ProxyReqWs', (proxyReq, req) => {
             proxyReq.setHeader('X-Real-Ip', req.socket.remoteAddress);
-        },
-        logger: proxyLog,
-    });
-    const httpProxy = createProxyMiddleware({
-        router: req => {
-            return httpList[j++%httpList.length] + req.baseUrl.slice(1);
-        },
-        logger: proxyLog,
-    });
-    const storage0Proxy = createProxyMiddleware({
-        router: req => {
-            return storageList[0] + req.baseUrl.slice(1);
-        },
-        logger: proxyLog,
-    });
+        });
+    };
+    wsProxy.upgrade = (req, socket, head) => {
+        proxyServer.ws(req, socket, { target: wsList[i++%wsList.length] }, head);
+    };
 
+    const httpProxy = (req, res) => {
+        proxyServer.web(req, res, {
+        target: httpList[j++%httpList.length] + req.baseUrl.slice(1)
+        });
+    };
+    const storage0Proxy = (req, res) => {
+        proxyServer.web(req, res, {
+            target: storageList[0] + req.baseUrl.slice(1)
+        });
+    };
 
     app.use('/api/updatequota', storage0Proxy);
     app.use('/api/logo', (req, res, next) => {
@@ -143,15 +135,14 @@ const initProxy = (Env, app, infra) => {
     app.get('/blob/placeholder.txt', checkAllStores);
     app.get('/block/placeholder.txt', checkAllStores);
 
-    const storeProxy = createProxyMiddleware({
-        router: req => {
-            const split = req.url.split('/');
-            const dataId = split[2];
-            const id = getStorageId(Env, dataId).slice(8); // remove "storage:"
-            return storageList[id] + req.baseUrl.slice(1);
-        },
-        logger: proxyLog,
-    });
+    const storeProxy = (req, res) => {
+        const split = req.url.split('/');
+        const dataId = split[2];
+        const id = getStorageId(Env, dataId).slice(8); // remove "storage:"
+        proxyServer.web(req, res, {
+            target: storageList[id] + req.baseUrl.slice(1)
+        });
+    };
     app.use('/blob', storeProxy);
     app.use('/datastore', storeProxy);
     app.use('/block', storeProxy);
@@ -159,24 +150,24 @@ const initProxy = (Env, app, infra) => {
 
     const pluginProxies = Env.plugins.getHttpProxy();
     pluginProxies.forEach(proxyCfg => {
-        const proxy = createProxyMiddleware({
-            router: req => {
+        const proxy = (res, req) => {
+            const getTarget = () => {
                 if (proxyCfg.target === "storage") {
                     const dataId = proxyCfg.getIdFromReq(req);
                     if (typeof (dataId) === "number") {
 
                     }
-                    const id = typeof(dataId) === "number" ? dataId
-                                    : getStorageId(Env, dataId).slice(8);
+                    const id = typeof (dataId) === "number" ? dataId
+                        : getStorageId(Env, dataId).slice(8);
                     return storageList[id] + req.baseUrl.slice(1);
                 }
                 if (proxyCfg.target === "http") {
-                    return httpList[j++%httpList.length]
-                            + req.baseUrl.slice(1);
+                    return httpList[j++ % httpList.length]
+                        + req.baseUrl.slice(1);
                 }
-            },
-            logger: proxyLog,
-        });
+            };
+            proxyServer.web(req, res, { target: getTarget() });
+        };
         app.use(proxyCfg.url, proxy);
     });
 
