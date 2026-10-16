@@ -514,7 +514,7 @@ process.on('message', function(obj) {
     command(data, cb);
 });
 process.on('uncaughtException', function(err) {
-    console.error('[%s] UNCAUGHT EXCEPTION IN DB WORKER', new Date());
+    console.error('[%s] UNCAUGHT EXCEPTION IN DB CLUSTER', new Date());
     console.error(err);
     console.error("TERMINATING");
     process.exit(1);
