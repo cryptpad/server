@@ -48,9 +48,16 @@ args.some(arg => {
 });
 
 // Clean quit: kill child processes
-const childPids = [];
+const childPids = new Set();
 
-const cleanSubprocesses = () => childPids.forEach((pid) => process.kill(pid));
+const cleanSubprocesses = () => Array.from(childPids).forEach((pid) => {
+    try {
+        process.kill(pid);
+    } catch (e) {
+        if (e.code === 'ESRCH') { return; }
+        console.error(e);
+    }
+});
 
 process.on('SIGTERM', cleanSubprocesses);
 process.on('exit', cleanSubprocesses);
@@ -78,7 +85,7 @@ const start = (serverConfig, infraConfig) => {
         //Log.info(`Starting: ${initConfig.myId}`);
         if (forking) {
             let nodeProcess = fork(path);
-            childPids.push(nodeProcess.pid);
+            childPids.add(nodeProcess.pid);
             nodeProcess.send(initConfig);
             nodeProcess.on('message', (message) => {
                 if (message.msg === 'READY') {
@@ -93,12 +100,16 @@ const start = (serverConfig, infraConfig) => {
                 Log.error('Child process stopped due to error.');
                 Log.error(err);
                 reject(`${type}:${index}: error ${err}`);
+                if (childPids.has(nodeProcess.pid)) { childPids.delete(nodeProcess.pid); }
                 process.exit(1);
             });
             nodeProcess.on('exit', (err) => {
-                Log.error('Child process stopped due to error.');
-                Log.error(err);
+                if (err) {
+                    Log.error('Child process stopped due to error.');
+                    Log.error(err);
+                }
                 reject(`${type}:${index}: exit(${err})`);
+                if (childPids.has(nodeProcess.pid)) { childPids.delete(nodeProcess.pid); }
                 process.exit(err);
             });
         } else {
