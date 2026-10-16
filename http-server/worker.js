@@ -77,24 +77,29 @@ const initProxy = (Env, app, infra) => {
     let i = 0;
     let j = 0;
     const proxyServer = createProxyServer({});
-    const wsProxy = (req, res) => {
-        proxyServer.web(req, res, { target: wsList[i] });
-        proxyServer.on('ProxyReqWs', (proxyReq, req) => {
-            proxyReq.setHeader('X-Real-Ip', req.socket.remoteAddress);
-        });
-    };
-    wsProxy.upgrade = (req, socket, head) => {
-        proxyServer.ws(req, socket, { target: wsList[i++%wsList.length] }, head);
+
+    const wsProxyUpgrade = (req, socket, head) => {
+      proxyServer.ws(req, socket, {
+        target: wsList[i++ % wsList.length]
+      }, head).catch(e => {
+        Env.Log.debug('PROXY_UPGRADE_ERROR', e);
+      });
     };
 
     const httpProxy = (req, res) => {
         proxyServer.web(req, res, {
-        target: httpList[j++%httpList.length] + req.baseUrl.slice(1)
+            target: httpList[j++%httpList.length] + req.baseUrl.slice(1)
+        }).catch(e => {
+            Env.Log.debug('HTTP_PROXY_ERROR', e);
+            res.end();
         });
     };
     const storage0Proxy = (req, res) => {
         proxyServer.web(req, res, {
             target: storageList[0] + req.baseUrl.slice(1)
+        }).catch(e => {
+            Env.Log.debug('STORE0_PROXY_ERROR', e);
+            res.end();
         });
     };
 
@@ -107,7 +112,6 @@ const initProxy = (Env, app, infra) => {
         storage0Proxy(req, res, next);
     });
 
-    app.use('/cryptpad_websocket', wsProxy);
     app.use('/extensions.js', httpProxy);
     app.use('/api', httpProxy);
 
@@ -138,11 +142,16 @@ const initProxy = (Env, app, infra) => {
     const storeProxy = (req, res) => {
         const split = req.url.split('/');
         const dataId = split[2];
+        if (!dataId) { return res.status(520).send(); }
         const id = getStorageId(Env, dataId).slice(8); // remove "storage:"
         proxyServer.web(req, res, {
             target: storageList[id] + req.baseUrl.slice(1)
+        }).catch(e => {
+            Env.Log.info('STORE_PROXY_ERROR', e);
+            res.end();
         });
     };
+
     app.use('/blob', storeProxy);
     app.use('/datastore', storeProxy);
     app.use('/block', storeProxy);
@@ -168,7 +177,7 @@ const initProxy = (Env, app, infra) => {
         app.use(proxyCfg.url, proxy);
     });
 
-    return wsProxy;
+    return wsProxyUpgrade;
 };
 
 const initHeaders = (Env, app) => {
@@ -273,7 +282,7 @@ const init = (mainConfig, cb) => {
     const app = Express();
 
     initFeedback(Env, app);
-    const wsProxy = initProxy(Env, app, infra);
+    const wsProxyUpgrade = initProxy(Env, app, infra);
     initHeaders(Env, app);
     initPlugins(Env, app);
     initStatic(Env, app);
@@ -287,7 +296,7 @@ const init = (mainConfig, cb) => {
                 Env.Log.info('DEV mode enabled');
             }
         });
-        httpServer.on('upgrade', wsProxy.upgrade);
+        httpServer.on('upgrade', wsProxyUpgrade);
 
         if (!Env.httpSafePort) { return; }
         const safeServer = Http.createServer(app);
