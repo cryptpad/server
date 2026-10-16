@@ -401,7 +401,7 @@ const init = (config, cb) => {
         return cb();
     }).catch(e => {
         ctx.Log.error('INTERFACE_UNEXPECTED_ERROR', e);
-        throw new Error(e);
+        throw e instanceof Error ? e : new Error(e);
     });
 
     return manager;

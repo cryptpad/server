@@ -749,6 +749,17 @@ const startServers = (mainConfig) => {
     });
 };
 
+process.on('uncaughtException', (e) => {
+    if (e.code === 'EADDRINUSE') {
+        console.error("Error when starting server: address in use.");
+        console.error("Check in config/infra.js if there are any overlaps or if you already have a server running or another service running on one of the ports defined in infra.js.");
+    } else {
+        console.error(e);
+    }
+    console.error('TERMINATING');
+    process.exit(1);
+});
+
 module.exports = {
     start: startServers
 };
