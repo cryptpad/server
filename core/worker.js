@@ -135,7 +135,7 @@ process.on('message', function(obj) {
 process.on('disconnect', () => { process.exit(0); });
 
 process.on('uncaughtException', function(err) {
-    console.error('[%s] UNCAUGHT EXCEPTION IN DB WORKER', new Date());
+    console.error('[%s] UNCAUGHT EXCEPTION IN CORE WORKER', new Date());
     console.error(err);
     console.error("TERMINATING");
     process.exit(1);

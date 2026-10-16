@@ -347,7 +347,7 @@ process.on('message', (obj) => {
 });
 
 process.on('uncaughtException', function(err) {
-    console.error('[%s] UNCAUGHT EXCEPTION IN DB WORKER', new Date());
+    console.error('[%s] UNCAUGHT EXCEPTION IN HTTP WORKER', new Date());
     console.error(err);
     console.error("TERMINATING");
     process.exit(1);
