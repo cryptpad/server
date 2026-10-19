@@ -225,7 +225,7 @@ Network.init = (Env, config, onEnvReady) => {
     initExpress(Env);
 
     // WEBSOCKET
-    const RECV_RATE_LIMIT = 100; // messages per second slot
+    const RECV_RATE_LIMIT = 200; // messages per second slot
 
     const checkWssLimit = (user) => {
         const { wssLimit } = user;
