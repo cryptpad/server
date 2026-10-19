@@ -159,7 +159,7 @@ const initProxy = (Env, app, infra) => {
 
     const pluginProxies = Env.plugins.getHttpProxy();
     pluginProxies.forEach(proxyCfg => {
-        const proxy = (res, req) => {
+        const proxy = (req, res) => {
             const getTarget = () => {
                 if (proxyCfg.target === "storage") {
                     const dataId = proxyCfg.getIdFromReq(req);
@@ -172,7 +172,11 @@ const initProxy = (Env, app, infra) => {
                         + req.baseUrl.slice(1);
                 }
             };
-            proxyServer.web(req, res, { target: getTarget() });
+            proxyServer.web(req, res, { target: getTarget() })
+            .catch(e => {
+              Env.Log.info('PROXY_PLUGIN_ERROR', e);
+              res.end();
+            });
         };
         app.use(proxyCfg.url, proxy);
     });
