@@ -176,15 +176,21 @@ const upload = (Env, safeKey, data, cb) => {
     Env.interface.sendQuery(storageId, 'RPC_UPLOAD_CHUNK',
         { safeKey, chunk }, res => { cb(res.error, res.data); });
 };
-const uploadComplete = (Env, safeKey, id, cb) => {
+const parseUploadComplete = data => {
+    if (typeof(data) === 'string') { return { id: data }; }
+    return { id: data?.id, expire: data?.expire };
+};
+const uploadComplete = (Env, safeKey, data, cb) => {
+    const { id, expire } = parseUploadComplete(data);
     const storageId = getStorageId(Env, id);
     Env.interface.sendQuery(storageId, 'RPC_UPLOAD_COMPLETE',
-        { safeKey, id }, res => { cb(res.error, res.data); });
+        { safeKey, id, expire }, res => { cb(res.error, res.data); });
 };
-const uploadCompleteOwned = (Env, safeKey, id, cb) => {
+const uploadCompleteOwned = (Env, safeKey, data, cb) => {
+    const { id, expire } = parseUploadComplete(data);
     const storageId = getStorageId(Env, id);
     Env.interface.sendQuery(storageId, 'RPC_UPLOAD_COMPLETE_OWNED',
-        { safeKey, id }, res => { cb(res.error, res.data); });
+        { safeKey, id, expire }, res => { cb(res.error, res.data); });
 };
 const adminCommand = Admin.command;
 const setMetadata = (Env, safeKey, args, cb) => {

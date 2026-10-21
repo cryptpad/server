@@ -79,6 +79,7 @@ const init = (config, cb) => {
             log: Env.Log,
             taskPath,
             store: Env.store,
+            blobStore: Env.blobStore,
         }, waitFor((err, tasks) => {
             if (err) {
                 waitFor.abort();
@@ -603,7 +604,7 @@ const reportStatus = (Env, label, safeKey, err, id, size) => {
     Env.Log[method](label, data);
 };
 const completeUpload = (data, cb) => {
-    const { owned, arg, size, linked } = data;
+    const { owned, arg, size, linked, expire } = data;
 
     if (!data) { return void cb('INVALID_ARGS'); }
     if (typeof(data.safeKey) !== 'string') {
@@ -625,6 +626,16 @@ const completeUpload = (data, cb) => {
 
     Env.blobStore[method](safeKey, arg, (err, id) => {
         reportStatus(Env, label, safeKey, err, id, size);
+        if (err) { return void cb(err, id); }
+
+        const maxExpire = new Date().setMonth(new Date().getMonth() + 100);
+        if (expire && typeof(expire) === 'number' && expire < maxExpire) {
+            Env.tasks.write(expire, "EXPIRE_BLOB", [ id ], (err) => {
+                if (err) {
+                    Env.Log.error('DB_CREATE_EXPIRE_BLOB_TASK', err);
+                }
+            });
+        } 
         cb(err, id);
     }, linked);
 };

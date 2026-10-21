@@ -91,13 +91,13 @@ Upload.cancel = (Env, data, cb) => {
 
 const completeUpload = (owned) => {
     return (Env, data, cb) => {
-        const { id, safeKey }  = data;
+        const { id, safeKey, expire }  = data;
         Env.blobStore.closeBlobstage(safeKey);
         Env.cluster.closeBlobstage(safeKey); // close blobstage in workers
         const user = Core.getSession(Env.blobstage, safeKey);
         const size = user.pendingUploadSize;
         const linked = user.linked;
-        Env.worker.completeUpload(safeKey, id, Boolean(owned), size, linked, cb);
+        Env.worker.completeUpload(safeKey, id, Boolean(owned), size, linked, expire, cb);
     };
 };
 
