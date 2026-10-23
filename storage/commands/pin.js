@@ -300,7 +300,7 @@ Pinning.getHash = (Env, safeKey, cb) => {
 };
 
 Pinning.pinChannel = (Env, safeKey, channels, cb) => {
-    if (!channels && channels.filter) {
+    if (!Array.isArray(channels)) {
         return void cb('INVALID_PIN_LIST');
     }
 
@@ -353,7 +353,7 @@ Pinning.pinChannel = (Env, safeKey, channels, cb) => {
 };
 
 Pinning.unpinChannel = (Env, safeKey, channels, cb) => {
-    if (!channels && channels.filter) {
+    if (!Array.isArray(channels)) {
         // expected array
         return void cb('INVALID_PIN_LIST');
     }

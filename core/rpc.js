@@ -121,16 +121,19 @@ const getHistorySize = (Env, args, cb, userId) => {
 
 // Auth
 const resetUserPins = (Env, safeKey, channels, cb) => {
+    if (!Array.isArray(channels)) { return void cb('INVALID_PIN_LIST'); }
     const storageId = getStorageId(Env, safeKey);
     Env.interface.sendQuery(storageId, 'RPC_PINNING_RESET',
         { channels, safeKey }, res => { cb(res.error, res.data); });
 };
 const pinChannel = (Env, safeKey, channels, cb) => {
+    if (!Array.isArray(channels)) { return void cb('INVALID_PIN_LIST'); }
     const storageId = getStorageId(Env, safeKey);
     Env.interface.sendQuery(storageId, 'RPC_PINNING_PIN', 
         { channels, safeKey }, res => { cb(res.error, res.data); });
 };
 const unpinChannel = (Env, safeKey, channels, cb) => {
+    if (!Array.isArray(channels)) { return void cb('INVALID_PIN_LIST'); }
     const storageId = getStorageId(Env, safeKey);
     Env.interface.sendQuery(storageId, 'RPC_PINNING_UNPIN',
         { channels, safeKey }, res => { cb(res.error, res.data); });
