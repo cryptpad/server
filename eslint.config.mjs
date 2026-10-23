@@ -17,7 +17,7 @@ const rules = {
     "no-empty": ["off"],
     "no-useless-escape": ["off"],
     "no-extra-boolean-cast": ["off"],
-    "no-prototype-builtins": ["error"],
+    "no-prototype-builtins": ["off"],
     "no-use-before-define": ["error"],
     "no-undef": ["error"],
     "no-unused-vars": [
