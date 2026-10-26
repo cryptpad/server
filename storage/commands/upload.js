@@ -86,7 +86,9 @@ Upload.upload = (Env, data, cb) => {
 
 Upload.cancel = (Env, data, cb) => {
     const { safeKey, size } = data;
-    Env.blobStore.cancel(safeKey, size, cb);
+    Env.blobStore.cancel(safeKey, size, () => {
+        Env.cluster.cancelUpload(safeKey, size, cb); // close blobstage in workers
+    });
 };
 
 const completeUpload = (owned) => {

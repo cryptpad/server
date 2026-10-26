@@ -765,6 +765,12 @@ const initHttpServer = (Env, mainConfig, _cb) => {
             Env.Log.verbose('CLOSE_BLOBSTAGE');
         });
     };
+    Env.cluster.cancelUpload = (safeKey, size, cb) => {
+        Env.clusters.broadcast('CANCEL_UPLOAD', { safeKey, size }, () => {
+            Env.Log.verbose('CANCEL_UPLOAD', safeKey);
+            cb();
+        });
+    };
 };
 
 const onInitialized = (Env, _cb) => {
