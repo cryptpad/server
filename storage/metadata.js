@@ -473,6 +473,10 @@ Meta.createLineHandler = function (ref, errorHandler) {
             overwritten = true;
             // special case!
             ref.meta = line;
+            if (typeof ref.meta?.owners === 'string') {
+              // mailboxes have meta.owners stored as a string instead of an array
+              ref.meta.owners = [ref.meta?.owners];
+            }
             return;
         }
 
