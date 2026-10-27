@@ -39,6 +39,10 @@ COMMANDS.NEW_DECREES = (data, cb) => {
     onEnvReady.fire();
     cb();
 };
+COMMANDS.CANCEL_UPLOAD = (data, cb) => {
+    const { safeKey, size } = data;
+    Env.blobStore.cancel(safeKey, size, cb, true);
+};
 COMMANDS.CLOSE_BLOBSTAGE = (data, cb) => {
     const { safeKey } = data;
     Env.blobStore.closeBlobstage(safeKey);
@@ -125,7 +129,7 @@ const initServerHandlers = (Env, app) => {
         // block access control only applies to files
         // identified by base64-encoded public keys
         // skip everything else, ie. /block/placeholder.txt
-        if (/placeholder\.txt(\?.+)?/.test(parsed.base)) {
+        if (/^placeholder\.txt(\?.+)?/.test(parsed.base)) {
             return void next();
         }
         if (typeof(name) !== 'string' || name.length !== 44) {

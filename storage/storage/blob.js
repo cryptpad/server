@@ -365,7 +365,7 @@ var closeBlobstage = function (Env, safeKey) {
 };
 
 // upload_cancel
-var upload_cancel = function (Env, safeKey, fileSize, cb) {
+var upload_cancel = function (Env, safeKey, fileSize, cb, noUnlink) {
     var session = Env.getSession(safeKey);
     session.pendingUploadSize = fileSize;
     session.currentUploadSize = 0;
@@ -373,6 +373,8 @@ var upload_cancel = function (Env, safeKey, fileSize, cb) {
         session.blobstage.close();
         delete session.blobstage;
     }
+
+    if (noUnlink) { return void cb(); }
 
     var path = makeStagePath(Env, safeKey);
 
@@ -809,11 +811,11 @@ BlobStore.create = function (config, _cb) {
                 checkUploadCookie(Env, safeKey, Util.once(Util.mkAsync(cb)));
             },
 
-            cancel: function (safeKey, fileSize, _cb) {
+            cancel: function (safeKey, fileSize, _cb, noUnlink) {
                 var cb = Util.once(Util.mkAsync(_cb));
                 if (!isValidSafeKey(safeKey)) { return void cb('INVALID_SAFEKEY'); }
                 if (typeof(fileSize) !== 'number' || isNaN(fileSize) || fileSize <= 0) { return void cb("INVALID_FILESIZE"); }
-                upload_cancel(Env, safeKey, fileSize, cb);
+                upload_cancel(Env, safeKey, fileSize, cb, noUnlink);
             },
 
             isOwnedBy: function (safeKey, blobId, _cb) {
