@@ -456,7 +456,10 @@ Network.init = (Env, config, onEnvReady) => {
             socket.on('message', message => {
                 if (!Env.users[user.id]) { return; } // websocket closing
                 if (!checkWssLimit(user)) { return ; } // silently ignoring an abusing user messages
-                Env.Log.silly('Receiving', JSON.parse(message), 'from', user.id);
+                Env.Log.silly('RECEIVED_MESSAGE', {
+                    msg: message,
+                    from: user.id
+                });
                 handleMessage(user, message, e => {
                     if (!e) { return; }
                     Env.Log.error(e, 'NETFLUX_BAD_MESSAGE', {
