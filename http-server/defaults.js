@@ -13,7 +13,7 @@ Default.commonCSP = function (Env) {
     var wsURL = domain.replace('https://', 'wss://').replace('http://', 'ws://');
 
     return [
-        `default-src 'none'`,
+        `default-src 'self' ${domain}`,
         `style-src 'unsafe-inline' 'self' ${domain}`,
         `font-src 'self' data: ${domain}`,
 
