@@ -615,9 +615,9 @@ const initWorkerCommands = () => {
         }, cb);
     };
 
-    Env.worker.completeUpload = (safeKey, arg, owned, size, linked, cb) => {
+    Env.worker.completeUpload = (safeKey, arg, owned, size, linked, expire, cb) => {
         Env.workers.send('COMPLETE_UPLOAD', {
-            safeKey, arg, owned, size, linked
+            safeKey, arg, owned, size, linked, expire
         }, cb);
     };
 
