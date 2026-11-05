@@ -129,8 +129,9 @@ const initServerHandlers = (Env, app) => {
         // block access control only applies to files
         // identified by base64-encoded public keys
         // skip everything else, ie. /block/placeholder.txt
-        if (/^placeholder\.txt(\?.+)?/.test(parsed.base)) {
-            return void next();
+        if (req.path === '/placeholder.txt') {
+            let phPath = Path.join(Env.paths.block, 'placeholder.txt');
+            return res.sendFile(Path.resolve(phPath));
         }
         if (typeof(name) !== 'string' || name.length !== 44) {
             return void res.status(404).json({
