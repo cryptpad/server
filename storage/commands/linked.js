@@ -49,32 +49,44 @@ Linked.getLinkedDocuments = (Env, data, cb) => {
     });
 };
 
+
+const listFromJson = json => {
+    const list = new Set();
+    // For each type, add the channels and/or blobs
+    allowedTypes.forEach(type => {
+        const data = json[type];
+        if (!Array.isArray(data)) { return; }
+        // Media or channel:
+        if (type !== 'checkpoints') {
+            data.forEach(id => { list.add(id); });
+            return;
+        }
+        // Checkpoint:
+        data.forEach(obj => {
+            if (obj?.rtChannel) { list.add(obj.rtChannel); }
+            if (obj?.blob) { list.add(obj.blob); }
+        });
+    });
+    return Array.from(list);
+};
 Linked.listLinkedDocuments = (Env, channel, _cb) => {
     const cb = Util.mkAsync(_cb);
     if (channel.length !== HK.STANDARD_CHANNEL_LENGTH) {
         return void cb(void 0, []);
     }
 
-    const list = new Set();
     Linked.getLinkedDocuments(Env, { channel }, (err, json) => {
         if (err) { return void cb(err); }
-        // For each type, add the channels and/or blobs
-        allowedTypes.forEach(type => {
-            const data = json[type];
-            if (!Array.isArray(data)) { return; }
-            // Media or channel:
-            if (type !== 'checkpoints') {
-                data.forEach(id => { list.add(id); });
-                return;
-            }
-            // Checkpoint:
-            data.forEach(obj => {
-                if (obj?.rtChannel) { list.add(obj.rtChannel); }
-                if (obj?.blob) { list.add(obj.blob); }
-            });
-        });
-        cb(void 0, Array.from(list));
+        cb(void 0, listFromJson(json));
     });
+};
+
+Linked.listLinkedDocumentsSync = (store, channel) => {
+    if (channel.length !== HK.STANDARD_CHANNEL_LENGTH) { return; }
+
+    const json = store.getLinkedDocumentsSync(channel);
+    if (!json) { return; }
+    return listFromJson(json);
 };
 
 Linked.listOldCheckpoints = (Env, channel, cb) => {

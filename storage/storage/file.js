@@ -272,6 +272,16 @@ const getLinkedDocuments = (env, channelId, cb) => {
     const path = mkLinkedPath(env, channelId);
     readLinkedFile(env, path, cb);
 };
+const readLinkedFileSync = (env, path) => {
+    try {
+        const content = Fs.readFileSync(path);
+        return JSON.parse(content.toString('utf8'));
+    } catch (e) {}
+};
+const getLinkedDocumentsSync = (env, channelId) => {
+    const path = mkLinkedPath(env, channelId);
+    return readLinkedFileSync(env, path);
+};
 
 
 const destroyStream = function (stream) {
@@ -1597,6 +1607,10 @@ module.exports.create = function (conf, _cb) {
             // get linked documents
             hasLinkedDocuments: (channelId) => {
                 return hasLinkedDocuments(env, channelId);
+            },
+            getLinkedDocumentsSync: (channelId) => {
+                // eviction workaround
+                return getLinkedDocumentsSync(env, channelId);
             },
             getLinkedDocuments: (channelId, cb) => {
                 if (!isValidChannelId(channelId)) { return cb(new Error('EINVAL')); }

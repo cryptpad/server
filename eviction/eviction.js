@@ -14,6 +14,7 @@ const Logger = require("../common/logger.js");
 const Store = require("../storage/storage/file");
 const BlobStore = require("../storage/storage/blob");
 const Quota = require("../storage/commands/quota");
+const Linked = require("../storage/commands/linked");
 const Environment = require('../common/env.js');
 const BatchRead = require("../storage/batch-read.js");
 
@@ -366,6 +367,19 @@ module.exports = function (Env, cb) {
 
         var pinAll = function (pinList) {
             pinList.forEach(function (docId) {
+                // TODO better way to manage linked documents
+                if (pinnedDocs.test(docId)) {
+                    try {
+                        const hasLinked = store.hasLinkedDocuments(docId);
+                        if (hasLinked) { // also pin linked docs
+                            const linked = Linked.listLinkedDocumentsSync(store, docId);
+                            linked.forEach(linkedId => {
+                                pinnedDocs.add(linkedId);
+                            });
+                        }
+                    } catch (e) {}
+                }
+
                 pinnedDocs.add(docId);
             });
         };
