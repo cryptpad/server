@@ -174,10 +174,13 @@ const uploadCancel = (Env, safeKey, data, cb) => {
         { safeKey, size }, res => { cb(res.error, res.data); });
 };
 const upload = (Env, safeKey, data, cb) => {
+    cb('DEPRECATED');
+    /*
     const { chunk, id } = data;
     const storageId = getStorageId(Env, id);
     Env.interface.sendQuery(storageId, 'RPC_UPLOAD_CHUNK',
         { safeKey, chunk }, res => { cb(res.error, res.data); });
+    */
 };
 const uploadComplete = (Env, safeKey, id, cb) => {
     const storageId = getStorageId(Env, id);

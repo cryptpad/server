@@ -275,6 +275,9 @@ var readBlobMetadata = function (env, blobId, handler, _cb) {
 var upload = function (Env, safeKey, content, cb) {
     var dec;
 
+    // max base64 chunk length is 174784
+    if (content.length > 175000) { return void cb('E_TOO_LARGE'); }
+
     try { dec = Buffer.from(content, 'base64'); }
     catch (e) { return void cb('DECODE_BUFFER'); }
 
@@ -283,7 +286,7 @@ var upload = function (Env, safeKey, content, cb) {
     var session = Env.getSession(safeKey);
 
     const todo = () => {
-        if (session.currentUploadSize > session.pendingUploadSize) {
+        if (session.currentUploadSize >= session.pendingUploadSize) {
             return cb('E_OVER_LIMIT');
         }
 
@@ -536,7 +539,6 @@ var removeArchivedBlob = function (Env, blobId, cb) {
     var CB = Util.once(cb);
     var archivePath = prependArchive(Env, makeBlobPath(Env, blobId));
     var metadataPath = prependArchive(Env, mkMetadataPath(Env, blobId));
-    Fs.unlink(archivePath, cb);
     nThen(function (w) {
         Fs.unlink(archivePath, w(function (err) {
             if (err) {

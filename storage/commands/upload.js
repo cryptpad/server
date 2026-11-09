@@ -16,8 +16,8 @@ Upload.status = (Env, data, _cb) => {
     const filesize = data.size;
 
     // validate that the provided size is actually a positive number
-    if (typeof(filesize) !== 'number' &&
-        filesize >= 0) { return void cb('E_INVALID_SIZE'); }
+    if (typeof(filesize) !== 'number' ||
+        filesize <= 0) { return void cb('E_INVALID_SIZE'); }
 
     nThen((w) => {
         // if the proposed upload size is within the regular limit

@@ -157,8 +157,7 @@ const evictArchived = function (Env, cb) {
         blobs.list.archived.blobs(function (err, item, next) {
             next = Util.mkAsync(next, THROTTLE_FACTOR);
             if (err) {
-                Log.error("EVICT_BLOB_LIST_ARCHIVED_BLOBS_ERROR", err);
-                return void next();
+                return void Log.error("EVICT_BLOB_LIST_ARCHIVED_BLOBS_ERROR", err, next);
             }
             if (item && item.ctime > retentionTime) { return void next(); }
             if (Env.DRY_RUN) {
@@ -167,12 +166,10 @@ const evictArchived = function (Env, cb) {
             }
             blobs.remove.archived.blob(item.blobId, function (err) {
                 if (err) {
-                    Log.error("EVICT_ARCHIVED_BLOB_ERROR", item);
-                    return void next();
+                    return void Log.error("EVICT_ARCHIVED_BLOB_ERROR", item, next);
                 }
-                Log.info("EVICT_ARCHIVED_BLOB", item);
                 removed++;
-                next();
+                Log.info("EVICT_ARCHIVED_BLOB", item, next);
             });
         }, w(function () {
             report.archivedBlobsRemoved = removed;
